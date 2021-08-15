@@ -15,7 +15,7 @@ module.exports = {
 			}
 
 		const query = args.join(' ');
-		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n]))/gm;
+		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 		const final = [...data.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
 		const idx = lunr(function() {
