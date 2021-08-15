@@ -29,21 +29,24 @@ module.exports = {
 			// this.k1(1.3);
 			// this.b(0);
 
-			final.forEach(function(doc) {
-				this.add(doc);
-			}, this);
+			final.forEach(doc => this.add(doc));
 		});
 
-		// console.log('Other results:', idx.search(query)[1].ref, idx.search(query)[2].ref, idx.search(query)[3].ref)
+		let speak = '';
+		let protoSpeak = '';
 
-		if (idx.search(query).length < 1) {
-			message.channel.send('Couldn\'t find a good match.'); return;
+		try {
+			protoSpeak = idx.search(query);
+			speak = protoSpeak[0].ref;
+			console.log(`Attempted to find '${query}' in transcript`);
+
 		}
 
-		const speak = idx.search(query)[0].ref;
-		// console.log(speak);
+		catch {
+			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
+		}
 
-		// console.log(`Attempted to find '${query}' in transcript`);
+		const finalAdditionalArray = 'Also try ' + protoSpeak.slice(1, 6).map(x =>`${x.ref}`).join(', ');
 
 		const chapterNumber = String(speak.match(/\d+(?=\.)/));
 		const chapter = chapterNumber.padStart(2, '0');
@@ -58,7 +61,7 @@ module.exports = {
 		.setTitle(`**${speak}**`)
 		.setImage(`https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`)
 		.setDescription(`[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${link})`);
-
+		if (finalAdditionalArray.length > 9) pageEmbed.setFooter(finalAdditionalArray);
         message.channel.send({ embeds: [pageEmbed] });
 
 		});
