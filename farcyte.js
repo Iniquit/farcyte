@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { Client, Intents, Collection } = require('discord.js');
-const { prefix, token } = require('./config.json');
+require('dotenv').config();
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 client.commands = new Collection();
@@ -29,9 +29,9 @@ client.on('messageCreate', message => {
 	}
 
 	// Command handling
-	if (!message.content.startsWith(prefix) || message.author.bot) return;
+	if (!message.content.startsWith(process.env.PREFIX) || message.author.bot) return;
 
-	const args = message.content.slice(prefix.length).trim().split(/ +/);
+	const args = message.content.slice(process.env.PREFIX.length).trim().split(/ +/);
 	const cmd = args.shift().toLowerCase();
 
 	if (!client.commands.has(cmd)) return;
@@ -48,4 +48,4 @@ client.on('messageCreate', message => {
 
 });
 
-client.login(token);
+client.login(process.env.TOKEN);
