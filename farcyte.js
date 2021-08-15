@@ -20,13 +20,8 @@ client.once('ready', () => {
 
 client.on('messageCreate', message => {
 
-	// Ignore bots (including Emilia)
+	// Ignore bots (including myself)
 	if (message.author.bot) return;
-
-	// Good morning, user!
-	if (/^[Gg]ood [Mm]orning(?![\w\s])/.test(message.content.toLowerCase())) {
-		message.channel.send('Good morning, ' + message.member.user.tag.slice(0, -5) + '!');
-	}
 
 	// Command handling
 	if (!message.content.startsWith(process.env.PREFIX) || message.author.bot) return;
