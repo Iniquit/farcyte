@@ -51,7 +51,7 @@ module.exports = {
 		const pageNumber = String(speak.match(/(?<=\.)\d+/)) ;
 		const page = pageNumber.padStart(2, '0');
 
-		const link = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${pageNumber}.html`;
+		const link = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
 
 		const pageEmbed = new MessageEmbed()
 		.setColor(0x5865F2) // 0xD95E40
