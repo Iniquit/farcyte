@@ -1,6 +1,8 @@
 const fs = require('fs');
 const { MessageEmbed } = require('discord.js');
-const lunr = require('lunr');
+const { Index, Document, Worker } = require('flexsearch');
+const FlexSearch = require('flexsearch');
+const { match } = require('assert');
 
 module.exports = {
 	name: 'find',
@@ -18,27 +20,53 @@ module.exports = {
 		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 		const final = [...data.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
-		const idx = lunr(function() {
-			this.ref('name');
-			this.field('text');
-			this.field('name');
-			this.pipeline.remove(lunr.stemmer);
-			this.searchPipeline.remove(lunr.stemmer);
-			this.pipeline.remove(lunr.stopWordFilter);
-			this.searchPipeline.remove(lunr.stopWordFilter);
-			// this.k1(1.3);
-			// this.b(0);
 
-			final.forEach(doc => this.add(doc));
-		});
+		const index = new Document({
+			// tokenize: 'full', doesn't help
+			preset: 'score',
+			language: "en",
+			tokenize: 'full',
+			// resolution: 80,
+			context: {
+				depth: 1,
+				resolution: 20,
+				threshold: 19,
+				bidirectional: false,
+			},
+			document: {
+				id: 'name',
+				index: [{
+					field: 'name',
+					//query: "some query",
+					limit: 5,
+					suggest: true
+				},{
+					field: "text",
+					//query: "same or other query",
+					limit: 5,
+					suggest: true
+				}] },
+			});
+
+
+		// index.add({ id: 0, content: "some text" });
+
+			final.forEach(doc => index.add(doc));
+
+			//console.log(final[0]);
+			 //console.log(index);
+
 
 		let speak = '';
 		let protoSpeak = '';
 
 		try {
-			protoSpeak = idx.search(query);
-			speak = protoSpeak[0].ref;
+			protoSpeak = index.search(query)[0];
+			speak = protoSpeak.result[0];
+			console.log('protospeak', protoSpeak);
+			console.log('speak', speak);
 			console.log(`Attempted to find '${query}' in transcript`);
+
 
 		}
 
@@ -46,7 +74,7 @@ module.exports = {
 			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
 		}
 
-		const finalAdditionalArray = 'Also try ' + protoSpeak.slice(1, 6).map(x =>`${x.ref}`).join(', ');
+		const finalAdditionalArray = 'Also try ' + protoSpeak.result.slice(1, 6).map(x =>`${x.ref}`).join(', ');
 
 		const chapterNumber = String(speak.match(/\d+(?=\.)/));
 		const chapter = chapterNumber.padStart(2, '0');
@@ -57,9 +85,11 @@ module.exports = {
 		const link = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
 
 		const pageEmbed = new MessageEmbed()
-		.setColor(0x5865F2) // 0xD95E40
-		if (!quiet) {pageEmbed.setTitle(`**${speak}**`)
-		.setImage(`https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`)}
+		.setColor(0x5865F2); // 0xD95E40
+		if (!quiet) {
+pageEmbed.setTitle(`**${speak}**`)
+		.setImage(`https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`);
+}
 		pageEmbed.setDescription(`[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${link})`);
 		if (finalAdditionalArray.length > 9 && !quiet) pageEmbed.setFooter(finalAdditionalArray);
         message.channel.send({ embeds: [pageEmbed] });

@@ -3,6 +3,7 @@
     "discord.js": "^13.1.0",
     "dotenv": "^10.0.0",
     "eslint": "^7.32.0",
+    "flexsearch": "^0.7.21",
     "lunr": "^2.3.9"
   }
 }
