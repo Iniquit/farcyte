@@ -41,17 +41,16 @@ module.exports = {
 			console.log(`Attempted to find '${query}' in transcript`);
 
 		}
-
 		catch {
 			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
 		}
 
 		const finalAdditionalArray = 'Also try ' + protoSpeak.slice(1, 6).map(x =>`${x.ref}`).join(', ');
 
-		const chapterNumber = String(speak.match(/\d+(?=\.)/));
+		const chapterNumber = String(foundPage.match(/\d+(?=\.)/));
 		const chapter = chapterNumber.padStart(2, '0');
 
-		const pageNumber = String(speak.match(/(?<=\.)\d+/)) ;
+		const pageNumber = String(foundPage.match(/(?<=\.)\d+/)) ;
 		const page = pageNumber.padStart(2, '0');
 
 		const link = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
