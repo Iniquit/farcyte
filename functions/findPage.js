@@ -1,63 +1,46 @@
-const fs = require('fs').promises
+const fs = require('fs').promises;
 const { Document } = require('flexsearch');
 
 module.exports = find;
 
  function find(args) {
-	return fs.readFile('Unsounded Transcription.txt', 'utf8')
-		.then(text => search(args, text))
-};
 
-function search(args, text) {
+	return fs.readFile('./Unsounded Transcription.txt', 'utf8')
+	.then(text => {
+		
+		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
+		const transcriptArray = [...text.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 	
-	const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
-	const transcriptArray = [...text.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
-
-	const index = new Document({
-		preset: 'score',
-		cache: 100,
-		tokenize: 'strict',
-		optimize: true,
-		encoder: 'extra',
-		context: {
-			depth: 2,
-			resolution: 9,
-			threshold: 8,
-			bidirectional: false,
-		},
-		document: {
-			id: 'name',
-			index: [{
-				field: 'name',
-				limit: 5,
-				suggest: true,
-			}, {
-				field: 'text',
-				limit: 5,
-				suggest: true,
-			}] },
-		});
-
-transcriptArray.forEach(doc => index.add(doc));
-
-
-try {
-	let foundPage = index.search(args)[0].result[0];
+		const transcriptIndex = new Document({
+			preset: 'score',
+			cache: 100,
+			tokenize: 'reverse',
+			optimize: true,
+			encoder: 'advanced',
+			context: {
+				depth: 2,
+				resolution: 9,
+				threshold: 8,
+				bidirectional: false,
+			},
+			document: {
+				id: 'name',
+				index: [{
+					field: 'name',
+					limit: 5,
+					suggest: true,
+				}, {
+					field: 'text',
+					limit: 5,
+					suggest: true,
+				}] },
+			});
 	
-	return {'pageNumber': foundPage,
-			//'embed': { embeds: [pageEmbed] }
-			}
-}
+	transcriptArray.forEach(doc => transcriptIndex.add(doc));
 
-catch {
-	return {'pageNumber': 'Couldn\'t find a match',
-	//'embed': { embeds: [pageEmbed] }
+	try { let foundPage = transcriptIndex.search(args)[0].result[0];
+		return {'pageNumber': foundPage}
 	}
-}
 
-
-
-
-
-
-};
+	catch {return {'pageNumber': 'Couldn\'t find a match'}}
+})};
