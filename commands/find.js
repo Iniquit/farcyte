@@ -6,7 +6,7 @@ module.exports = {
 	name: 'find',
 	description: 'Look something up in the Unsounded transcript',
 	usage: '<text>',
-	execute(message, args) {
+	execute(message, args, quiet) {
 		fs.readFile('./Unsounded Transcription.txt', 'utf8', (err, data) => {
 			if (err) {
 				console.error(err);
@@ -58,10 +58,10 @@ module.exports = {
 
 		const pageEmbed = new MessageEmbed()
 		.setColor(0x5865F2) // 0xD95E40
-		.setTitle(`**${speak}**`)
-		.setImage(`https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`)
-		.setDescription(`[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${link})`);
-		if (finalAdditionalArray.length > 9) pageEmbed.setFooter(finalAdditionalArray);
+		if (!quiet) {pageEmbed.setTitle(`**${speak}**`)
+		.setImage(`https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`)}
+		pageEmbed.setDescription(`[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${link})`);
+		if (finalAdditionalArray.length > 9 && !quiet) pageEmbed.setFooter(finalAdditionalArray);
         message.channel.send({ embeds: [pageEmbed] });
 
 		});
