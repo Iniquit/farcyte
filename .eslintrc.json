@@ -3,12 +3,11 @@
 	"env": {
 		"node": true,
 		"es6": true,
-		"jest": true,
+		"jest": true
 	},
 	"parserOptions": {
 		"ecmaVersion": 2019
 	},
-	// "plugins": ["jest"],
 	"rules": {
 		"brace-style": ["error", "stroustrup", { "allowSingleLine": true }],
 		"comma-dangle": ["error", "always-multiline"],
