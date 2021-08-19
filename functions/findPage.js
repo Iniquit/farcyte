@@ -1,15 +1,15 @@
-const fs = require('fs').promises
+const fs = require('fs').promises;
 const lunr = require('lunr');
 
 module.exports = find;
 
  function find(args) {
 	return fs.readFile('Unsounded Transcription.txt', 'utf8')
-		.then(text => search(args, text))
-};
+		.then(text => search(args, text));
+}
 
 function search(args, text) {
-	
+
 	const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 	const transcriptArray = [...text.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
@@ -21,20 +21,23 @@ function search(args, text) {
 		this.searchPipeline.remove(lunr.stemmer);
 		this.pipeline.remove(lunr.stopWordFilter);
 		this.searchPipeline.remove(lunr.stopWordFilter);
+		// this.pipeline.remove(lunr.trimmer);
+		// this.searchPipeline.add(lunr.trimmer);
+
+		// this.searchPipeline.add(lunr.trimmer);
 		// this.k1(1.3);
 		// this.b(0);
 
 		transcriptArray.forEach(doc => this.add(doc));
 	});
-
 	try {
-		let foundPage = index.search(args)[0].ref;
-		
-		return {'pageNumber': foundPage}
+		const foundPage = index.search(args)[0].ref;
+
+		return { 'pageNumber': foundPage };
 	}
 
 	catch {
-		return {'pageNumber': 'Couldn\'t find a match'}
+		return { 'pageNumber': 'Couldn\'t find a match' };
 	}
 
-};
+}
