@@ -18,6 +18,14 @@ module.exports = {
 		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 		const final = [...data.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
+		lunr.bigram =  function (token, idx, tokens) {
+
+			if (!(typeof tokens[idx + 1] === 'undefined' || tokens[idx + 1] === null)) {
+				return token + " " + tokens[idx + 1]
+			} else return "";
+			
+		  }
+
 		const idx = lunr(function() {
 			this.ref('name');
 			this.field('text');
@@ -26,11 +34,14 @@ module.exports = {
 			this.searchPipeline.remove(lunr.stemmer);
 			this.pipeline.remove(lunr.stopWordFilter);
 			this.searchPipeline.remove(lunr.stopWordFilter);
+			this.pipeline.add(lunr.bigram);
+			this.searchPipeline.add(lunr.bigram);
 			// this.k1(1.3);
 			// this.b(0);
 
 			final.forEach(doc => this.add(doc));
 		});
+		console.log(Object.keys(idx.invertedIndex).slice(0, 20))
 
 		let speak = '';
 		let protoSpeak = '';
@@ -47,10 +58,10 @@ module.exports = {
 
 		const finalAdditionalArray = 'Also try ' + protoSpeak.slice(1, 6).map(x =>`${x.ref}`).join(', ');
 
-		const chapterNumber = String(foundPage.match(/\d+(?=\.)/));
+		const chapterNumber = String(speak.match(/\d+(?=\.)/));
 		const chapter = chapterNumber.padStart(2, '0');
 
-		const pageNumber = String(foundPage.match(/(?<=\.)\d+/)) ;
+		const pageNumber = String(speak.match(/(?<=\.)\d+/)) ;
 		const page = pageNumber.padStart(2, '0');
 
 		const link = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
