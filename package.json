@@ -2,6 +2,7 @@
   "dependencies": {
     "discord.js": "^13.1.0",
     "dotenv": "^10.0.0",
+    "elasticlunr": "^0.9.5",
     "eslint": "^7.32.0",
     "eslint-plugin-jest": "^24.4.0",
     "flexsearch": "^0.7.21",

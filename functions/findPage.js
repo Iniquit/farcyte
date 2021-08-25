@@ -1,5 +1,5 @@
 const fs = require('fs').promises;
-const lunr = require('lunr');
+const elasticlunr = require('elasticlunr');
 
 module.exports = find;
 
@@ -13,6 +13,16 @@ function search(args, text) {
 	const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 	const transcriptArray = [...text.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
+	const index = elasticlunr(function() {
+		this.setRef('name');
+		this.addField('name');
+		this.addField('text');
+		elasticlunr.clearStopWords();
+
+		transcriptArray.forEach(doc => this.addDoc(doc));
+		
+	});
+/*
 	const index = lunr(function() {
 		this.ref('name');
 		this.field('text');
@@ -28,8 +38,8 @@ function search(args, text) {
 		// this.k1(1.3);
 		// this.b(0);
 
-		transcriptArray.forEach(doc => this.add(doc));
-	});
+		
+	});*/
 	try {
 		const foundPage = index.search(args)[0].ref;
 
