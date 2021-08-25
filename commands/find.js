@@ -69,10 +69,10 @@ module.exports = {
 		const pageEmbed = new MessageEmbed()
 		.setColor(0x5865F2)
 		.setTitle(`**${pageName}**`)
-		.setDescription(processPage(pageName).description);
+		.setDescription(`${processPage(pageName).description}\n **Also try:** ${suggestionsArray}`);
 		if (!quiet) pageEmbed.setImage(processPage(pageName).imageURL);
 		// if (!quiet && suggestionsArray.length > 9) pageEmbed.setFooter(suggestionsArray);
-		pageEmbed.addField('Also try', suggestionsArray, false);
+		// pageEmbed.addField('Also try', suggestionsArray, false);
 		message.channel.send({ embeds: [pageEmbed] });
 
 		});
