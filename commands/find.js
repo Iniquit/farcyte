@@ -64,15 +64,18 @@ module.exports = {
 			};
 		}
 
-		const suggestionsArray = foundPage.slice(1, 6).map(x =>`[${x.ref}](${processPage(x.ref).pageURL})`).join(', ');
+		const suggestionsList = foundPage.slice(1, 6).map(x =>`[${x.ref}](${processPage(x.ref).pageURL})`).join(', ');
 
 		const pageEmbed = new MessageEmbed()
 		.setColor(0x5865F2)
-		.setTitle(`**${pageName}**`)
-		.setDescription(processPage(pageName).description);
+		.setTitle(`**${pageName}**`);
+		if (!quiet && suggestionsList.length > 9) {
+			// pageEmbed.setFooter(suggestionsList);
+			pageEmbed.setDescription(`${processPage(pageName).description}\n **Also try:** ${suggestionsList}`);
+		}
+		else {pageEmbed.setDescription(`${processPage(pageName).description}`);}
 		if (!quiet) pageEmbed.setImage(processPage(pageName).imageURL);
-		// if (!quiet && suggestionsArray.length > 9) pageEmbed.setFooter(suggestionsArray);
-		pageEmbed.addField('Also try', suggestionsArray, false);
+
 		message.channel.send({ embeds: [pageEmbed] });
 
 		});
