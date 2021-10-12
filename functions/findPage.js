@@ -10,8 +10,16 @@ module.exports = find;
 
 function search(args, text) {
 
+	args = args.toLowerCase().split(/ +/);
 	const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 	const transcriptArray = [...text.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
+
+	lunr.bigram = function(token, idx, tokens) {
+		if (tokens[idx + 1] !== undefined) {return token + ' ' + tokens[idx + 1];}
+		else {return token;}
+	};
+
+	lunr.Pipeline.registerFunction(lunr.bigram, 'bigram');
 
 	const index = lunr(function() {
 		this.ref('name');
@@ -21,17 +29,19 @@ function search(args, text) {
 		this.searchPipeline.remove(lunr.stemmer);
 		this.pipeline.remove(lunr.stopWordFilter);
 		this.searchPipeline.remove(lunr.stopWordFilter);
-		// this.pipeline.remove(lunr.trimmer);
-		// this.searchPipeline.add(lunr.trimmer);
+		this.pipeline.add(lunr.bigram);
+		this.searchPipeline.add(lunr.bigram);
 
-		// this.searchPipeline.add(lunr.trimmer);
-		// this.k1(1.3);
-		// this.b(0);
 
 		transcriptArray.forEach(doc => this.add(doc));
 	});
+	// console.log(Object.keys(index.invertedIndex).slice(100, 120));
+
 	try {
-		const foundPage = index.search(args)[0].ref;
+		const foundPage = index.query((query) => {
+			query.term(args, { presence: lunr.Query.presence.OPTIONAL, wildcard: lunr.Query.wildcard.LEADING | lunr.Query.wildcard.TRAILING })[0].ref;
+		});
+		// const foundPage = index.search(args);
 
 		return { 'pageNumber': foundPage };
 	}

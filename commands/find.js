@@ -14,32 +14,59 @@ module.exports = {
 				return;
 			}
 
-		const query = args.join(' ');
+		 //const newQuery = args.join(' ');
+		
+
+		
+		// console.log('initial query:', query);
 		const pageRegex = /(?<name>[\d]+\.+[\d]+)(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+|$(?![\r\n])|\nCHAPTER)/gim;
 		const final = [...transcript.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
+		lunr.bigram = function(token, idx, tokens) {
+			if (tokens[idx + 1] !== undefined) {
+
+				token.str = token + ' ' + tokens[idx + 1].str;
+				//console.log(token);
+				return token;
+			}
+			else {
+				//console.log(token);
+				return token;
+			}
+
+		};
+
+		lunr.Pipeline.registerFunction(lunr.bigram, 'bigram');
+
 		const idx = lunr(function() {
 			this.ref('name');
-			this.field('text');
-			this.field('name');
-			this.pipeline.remove(lunr.stemmer);
-			this.pipeline.remove(lunr.stopWordFilter);
-			this.searchPipeline.remove(lunr.stemmer);
-			this.searchPipeline.remove(lunr.stopWordFilter);
-			// this.pipeline.remove(lunr.trimmer);
-			// this.k1(1.3);
-			// this.b(0);
+		this.field('text');
+		this.field('name');
+		this.pipeline.remove(lunr.stemmer);
+		this.searchPipeline.remove(lunr.stemmer);
+		this.pipeline.remove(lunr.stopWordFilter);
+		this.searchPipeline.remove(lunr.stopWordFilter);
+		this.pipeline.add(lunr.bigram);
+		this.searchPipeline.add(lunr.bigram);
 
-			final.forEach(doc => this.add(doc));
+
+		final.forEach(doc => this.add(doc));
 		});
+
+		console.log('indexed tokens:', Object.keys(idx.invertedIndex));
 
 		let foundPage = '';
 		let pageName = '';
 
 		try {
-			foundPage = idx.search(query);
+			foundPage = idx.query((query) => {
+				query.term(args, { presence: lunr.Query.presence.OPTIONAL, wildcard: lunr.Query.wildcard.LEADING | lunr.Query.wildcard.TRAILING });
+			});
+			// foundPage = idx.query(()=> 'this land', 'land as', 'as its');
+			// foundPage = idx.search(query);
 			pageName = foundPage[0].ref;
-			console.log(`Attempted to find '${query}' in transcript`);
+			console.log('indexed tokens:', foundPage[0].matchData);
+			// console.log(`Attempted to find '${query}' in transcript`);
 		}
 		catch {
 			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
