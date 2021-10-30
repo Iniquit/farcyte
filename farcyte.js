@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { Client, Intents, Collection } = require('discord.js');
+const utils = require('./functions/utils');
 require('dotenv').config();
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ['CHANNEL'] });
@@ -33,8 +34,7 @@ client.on('messageCreate', message => {
 
 	try {
 		client.commands.get(cmd).execute(message, args);
-		const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-		console.log(`[${new Date().toLocaleDateString('en-US', options)}]: Command ${cmd} issued by ${message.author.tag} with args '${args.join(' ')}'`);
+		utils.log(`${message.author.tag} issued command ${cmd} with args '${args.join(' ')}'`);
 	}
 	catch (error) {
 		console.error(error);

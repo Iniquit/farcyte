@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { MessageEmbed } = require('discord.js');
 const lunr = require('lunr');
+const utils = require('../functions/utils');
 
 module.exports = {
 	name: 'find',
@@ -39,7 +40,7 @@ module.exports = {
 		try {
 			foundPage = idx.search(query);
 			pageName = foundPage[0].ref;
-			console.log(`Found ${foundPage[0].ref} in transcript with certainty ${Math.round(foundPage[0].score)}.`);
+			utils.log(`Found ${foundPage[0].ref} in transcript with certainty ${Math.round(foundPage[0].score)}.`);
 		}
 		catch {
 			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
