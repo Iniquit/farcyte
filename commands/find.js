@@ -56,25 +56,33 @@ module.exports = {
 			const pageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
 			const imageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`;
 			const description = `[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${pageURL})`;
+			const descriptionNoLink = `Chapter ${chapterNumber}, Page ${pageNumber} ↗`;
 
 			return {
 				'pageURL': pageURL,
 				'imageURL': imageURL,
 				'description': description,
+				'descriptionNoLink': descriptionNoLink,
 			};
 		}
 
 		const suggestionsList = foundPage.slice(1, 6).map(x =>`[${x.ref}](${processPage(x.ref).pageURL})`).join(', ');
+		const currentPage = processPage(pageName);
 
 		const pageEmbed = new MessageEmbed()
 		.setColor(0x5865F2)
-		.setTitle(`**${pageName}**`);
+		.setTitle(`**${pageName} | ${currentPage.descriptionNoLink}**`)
+		.setURL(currentPage.pageURL);
 		if (!quiet && suggestionsList.length > 9) {
 			// pageEmbed.setFooter(suggestionsList);
-			pageEmbed.setDescription(`${processPage(pageName).description}\n **Also try:** ${suggestionsList}`);
+			pageEmbed.setDescription(`Also try ${suggestionsList}`);
 		}
-		else {pageEmbed.setDescription(`${processPage(pageName).description}`);}
-		if (!quiet) pageEmbed.setImage(processPage(pageName).imageURL);
+		else {
+			// pageEmbed.setDescription(`${currentPage.description}`);
+			// pageEmbed.setAuthor(processPage(pageName).imageURL);
+			// pageEmbed.setAuthor('Some name', processPage(pageName).imageURL, 'https://discord.js.org');
+		}
+		if (!quiet) pageEmbed.setImage(currentPage.imageURL);
 
 		message.channel.send({ embeds: [pageEmbed] });
 
