@@ -1,10 +1,11 @@
 const fs = require('fs').promises;
 const lunr = require('lunr');
+require('dotenv').config();
 
 module.exports = find;
 
  function find(args) {
-	return fs.readFile('Unsounded Transcription.txt', 'utf8')
+	return fs.readFile(process.env.TRANSCRIPT_FILE, 'utf8')
 		.then(text => search(args, text));
 }
 

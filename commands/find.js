@@ -7,7 +7,7 @@ module.exports = {
 	description: 'Look something up in the Unsounded transcript',
 	usage: '<text>',
 	execute(message, args, quiet) {
-		fs.readFile('Unsounded Transcription.txt', 'utf8', (err, transcript) => {
+		fs.readFile(process.env.TRANSCRIPT_FILE, 'utf8', (err, transcript) => {
 			if (err) {
 				console.error(err);
 				message.channel.send('Error: couldn\'t locate the transcript text file.');
