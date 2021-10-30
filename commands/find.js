@@ -39,7 +39,7 @@ module.exports = {
 		try {
 			foundPage = idx.search(query);
 			pageName = foundPage[0].ref;
-			console.log(`Attempted to find '${query}' in transcript`);
+			console.log(`Found ${foundPage[0].ref} in transcript with certainty ${Math.round(foundPage[0].score)}.`);
 		}
 		catch {
 			message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
