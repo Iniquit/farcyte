@@ -1,17 +1,23 @@
-const fs = require('fs');
-const { Client, Intents, Collection } = require('discord.js');
-const utils = require('./functions/utils');
-require('dotenv').config();
+import { readdirSync } from 'fs';
+import { Client, Intents, Collection } from 'discord.js';
+import { log } from './functions/utils.js';
+import indexer from './commands/indexer.js';
+import dotenv from 'dotenv'
+dotenv.config()
 
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ['CHANNEL'] });
 client.commands = new Collection();
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-	const command = require(`./commands/${file}`);
-	client.commands.set(command.name, command);
+	import(`./commands/${file}`).then((command) => {
+    client.commands.set(command.name, command);
+  });
+
 }
+
+indexer.CreateIndex(process.env.TRANSCRIPT_FILE);
 
 client.once('ready', () => {
 	console.log('Unsounded Search is awake!');
@@ -34,7 +40,7 @@ client.on('messageCreate', message => {
 
 	try {
 		client.commands.get(cmd).execute(message, args);
-		utils.log(`${message.author.tag} issued command ${cmd} with args '${args.join(' ')}'`);
+		log(`${message.author.tag} issued command ${cmd} with args '${args.join(' ')}'`);
 	}
 	catch (error) {
 		console.error(error);

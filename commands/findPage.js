@@ -1,8 +1,7 @@
-const fs = require('fs').promises;
-const lunr = require('lunr');
-require('dotenv').config();
+import { promises as fs } from 'fs';
+import lunr from 'lunr';
 
-module.exports = find;
+export default find;
 
  function find(args) {
 	return fs.readFile(process.env.TRANSCRIPT_FILE, 'utf8')
