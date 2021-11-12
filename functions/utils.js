@@ -1,6 +1,6 @@
-const chalk = require('chalk');
+import chalk from 'chalk';
 
-module.exports = { log };
+export { log };
 
  function log(arg) {
     const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
