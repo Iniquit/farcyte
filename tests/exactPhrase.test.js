@@ -1,4 +1,4 @@
-import indexer from '../commands/indexer.js';
+import indexer from '../functions/indexer.js';
 
 function Expect(phrase, targetPage) {
   test(`${phrase} finds ${targetPage}`, async () => {

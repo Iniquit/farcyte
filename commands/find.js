@@ -1,6 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 // import { log } from '../functions/utils';
-import indexer from './indexer.js';
+import indexer from '../functions/indexer.js';
 
 export const name = 'find';
 export const description = 'Look something up in the Unsounded transcript';
