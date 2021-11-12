@@ -1,7 +1,6 @@
 import { readdirSync } from 'fs';
 import { Client, Intents, Collection } from 'discord.js';
 import { log } from './functions/utils.js';
-import indexer from './commands/indexer.js';
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -16,8 +15,6 @@ for (const file of commandFiles) {
   });
 
 }
-
-indexer.CreateIndex(process.env.TRANSCRIPT_FILE);
 
 client.once('ready', () => {
 	console.log('Unsounded Search is awake!');

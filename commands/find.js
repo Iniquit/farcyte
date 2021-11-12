@@ -5,18 +5,19 @@ import indexer from './indexer.js';
 export const name = 'find';
 export const description = 'Look something up in the Unsounded transcript';
 export const usage = '<text>';
-export function execute(message, args, isQuiet) {
+export async function execute(message, args, isQuiet) {
 
-	let foundPage = '';
-	let pageName = '';
+	let pageName, foundPage = null;
 
 	try {
-		foundPage = indexer.Find(args.join(' '));
+		foundPage = await indexer.Find(args.join(' '));
 		pageName = foundPage[0].ref;
 		console.log(`Found ${foundPage[0].ref} in transcript with certainty ${Math.round(foundPage[0].score)}.`);
 	}
 	catch {
-		message.channel.send('No matches. Try removing punctuation or using a longer search query.'); return;
+		message.channel.send('No matches. Try removing punctuation or using a longer search query.');
+		console.log('Couldn\'t find a match.');
+		return;
 	}
 
 	function processPage(pageToProcess) {
