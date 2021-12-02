@@ -10,8 +10,6 @@ export default { Index, CreateIndex, Find };
 async function Find(query) {
     if (Index == null) Index = await CreateIndex(process.env.TRANSCRIPT_FILE);
     return await Index.search(query);
-    /* try { return this.Index.search(query); }
-    catch { return 'Couldn\'t find a match'; }*/
 }
 
 async function CreateIndex(transcriptFile) {
@@ -28,8 +26,6 @@ async function CreateIndex(transcriptFile) {
         this.searchPipeline.remove(lunr.stemmer);
         this.searchPipeline.remove(lunr.stopWordFilter);
         transcriptPages.forEach(doc => this.add(doc));
-        // console.log(`Index created from file at ${transcriptFile}`);
     });
-    // this.Index = index;
     return index;
 }
