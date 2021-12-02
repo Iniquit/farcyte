@@ -16,7 +16,7 @@ async function Find(query) {
 
 async function CreateIndex(transcriptFile) {
     const data = await fs.readFile(transcriptFile, 'utf8');
-    const pageRegex = /(?<name>[\d]+\.+[\d]+)\n+(?<text>[\s\S]+?)(?=[\d]+\.+[\d]+\n+|$(?![\r\n])|\nCHAPTER)/gim;
+    const pageRegex = /(?<name>(?<=\n)[\d]+\.[\d]+)(?<text>[\s\S]+?)(?=\n[\d]+\.[\d]+|\nCHAPTER|$(?![\r\n]))/gim;
     const transcriptPages = [...data.matchAll(pageRegex)].map (e => Object.assign({}, e.groups));
 
     const index = lunr(function() {

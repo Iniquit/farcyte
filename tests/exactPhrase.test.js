@@ -22,6 +22,8 @@ Expect('shade of green', '9.42');
 Expect('fealty after all rewards', '10.71');
 Expect('unrelentin\' explosive fire', '11.40');
 Expect('eccentric old charmers', '12.58');
+Expect('14.96', '14.96');
+Expect('14.123', '14.123');
 
 // currently failing but should probably pass
 Expect('only a da', '7.110');
