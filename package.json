@@ -15,5 +15,6 @@
   },
   "scripts": {
     "test": "jest"
-  }
+  },
+  "main": "farcyte.js"
 }

@@ -20,4 +20,4 @@ PREFIX=/
 TRANSCRIPT_FILE=UNSOUNDED Transcription.txt
 ```
 3. In the root directory of the project, run `npm i` to install the necessary dependencies.
-4. Run `node farcyte` or (on windows) double-click start.bat.
+4. Run `node farcyte` or (on windows) double-click start.bat or run `npx nodemon` to have a filewatcher that rebuilds on file changes.
