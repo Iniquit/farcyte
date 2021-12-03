@@ -19,5 +19,11 @@ TOKEN=your bot's token here
 PREFIX=/
 TRANSCRIPT_FILE=UNSOUNDED Transcription.txt
 ```
+
+If you get timeouts, you can also increase the number of milliseconds with:
+```
+REST_REQUEST_TIMEOUT_MS=30000
+```
+
 3. In the root directory of the project, run `npm i` to install the necessary dependencies.
 4. Run `node farcyte` or (on windows) double-click start.bat.
