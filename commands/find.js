@@ -14,9 +14,16 @@ export async function execute(message, args, isQuiet) {
 		console.log(`Found ${foundPage[0].ref} in transcript with certainty ${Math.round(foundPage[0].score)}.`);
 	}
 	catch {
-		message.channel.send('No matches. Try removing punctuation or using a longer search query.');
-		console.log('Couldn\'t find a match.');
-		return;
+		const fullArg = args.join('');
+		if (/^[0-9]+\.[0-9]+$/.test(fullArg)) {
+			pageName = fullArg;
+			console.log(`Assuming '${pageName}' is valid chapter + page number.`);
+		}
+		else {
+			message.channel.send('No matches. Try removing punctuation or using a longer search query.');
+			console.log('Couldn\'t find a match.');
+			return;
+		}
 	}
 
 	function processPage(pageToProcess) {
@@ -51,8 +58,8 @@ export async function execute(message, args, isQuiet) {
 		pageEmbed.setDescription(`Also try ${suggestionsList}`);
 	}
 
-	if (!isQuiet) {pageEmbed.setImage(currentPage.imageURL);}
+	if (!isQuiet) { pageEmbed.setImage(currentPage.imageURL); }
 
 	message.channel.send({ embeds: [pageEmbed] });
 
-	}
+}
