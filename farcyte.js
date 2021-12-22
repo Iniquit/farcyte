@@ -4,15 +4,19 @@ import { log } from './functions/utils.js';
 import dotenv from 'dotenv'
 dotenv.config()
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES], partials: ['CHANNEL'] });
+const client = new Client({
+	intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES],
+	partials: ['CHANNEL'],
+	...(/^\d+$/.test(process.env.REST_REQUEST_TIMEOUT_MS) && { restRequestTimeout: parseInt(process.env.REST_REQUEST_TIMEOUT_MS) }) // use defaults or override with .env
+});
 client.commands = new Collection();
 
 const commandFiles = readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
 	import(`./commands/${file}`).then((command) => {
-    client.commands.set(command.name, command);
-  });
+		client.commands.set(command.name, command);
+	});
 
 }
 
