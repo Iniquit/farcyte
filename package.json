@@ -15,5 +15,8 @@
   },
   "scripts": {
     "test": "jest"
+  },
+  "engines": {
+    "node": ">13"
   }
 }
