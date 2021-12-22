@@ -11,6 +11,8 @@ Both commands accept page numbers and chapter titles. You can also DM commands t
 ### Contributing
 Contributions are welcome! Just submit a pull request.
 
+A big thank-you to **Stanchion** for adding new features to the bot and improving the development workflow!
+
 ### Want to run your own copy?
 1. Clone or download this repository.
 2. In the root directory of the project, place a copy of the Unsounded transcript as a .txt file and a .env file in the following format:
