@@ -16,6 +16,7 @@
   "scripts": {
     "test": "jest"
   },
+  "main": "farcyte.js",
   "engines": {
     "node": ">13"
   }
