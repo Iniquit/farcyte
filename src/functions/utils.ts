@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 export { log };
 
- function log(arg) {
+ function log(arg: string) {
     const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
     const timeDate = new Date().toLocaleDateString('en-US', options);
 
