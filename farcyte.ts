@@ -45,17 +45,17 @@ class Farcyte {
     }
 
     this.client.on('interactionCreate', async (interaction: Interaction) => {
-      console.log('interaction!', interaction.type);
+      // console.log('interaction!', interaction.type);
 
       if (!interaction.isApplicationCommand()) {
-        console.log('not an application command');
+        // console.log('not an application command');
         return;
       }
 
       const command = this.commands.get(interaction.commandName);
 
       if (!command) {
-        console.log('no command by that name');
+        //console.log('no command by that name');
         return;
       }
 

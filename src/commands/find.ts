@@ -5,29 +5,40 @@ import indexer from '../functions/indexer';
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('find')
-    .setDescription(
-      'Look up a phrase or page number in the Unsounded transcript.',
-    )
+    .setDescription('Find a phrase or page in the Unsounded transcript.')
     .addStringOption((option) =>
       option
         .setName('query')
         .setDescription('A phrase or page number to search the transcript for.')
         .setRequired(true),
     )
+    .addIntegerOption((option) =>
+      option
+        .setName('chapter')
+        .setDescription('A chapter to restrict your search to.'),
+    )
     .addBooleanOption((option) =>
       option
         .setName('quiet')
-        .setDescription('Whether or not the page preview should be displayed.')
+        .setDescription('Whether the page preview should be hidden.')
         .setRequired(false),
     ),
   async execute(interaction: any) {
     let pageName = null;
     let foundPage = null;
-    const query: string = interaction.options.getString('query');
+    let query: string = interaction.options.getString('query');
+    const chapterFilter: number = interaction.options.getInteger('chapter');
     const isQuiet: boolean = interaction.options.getBoolean('quiet');
 
     try {
       foundPage = await indexer.find(query);
+
+      if (chapterFilter) {
+        foundPage = foundPage.filter(
+          (page) => page.ref.split('.')[0] === chapterFilter.toString(),
+        );
+      }
+
       pageName = foundPage[0].ref;
       console.log(
         `Found ${foundPage[0].ref} in transcript with certainty ${Math.round(
@@ -35,7 +46,7 @@ module.exports = {
         )}.`,
       );
     } catch {
-      if (/^[0-9]+\.[0-9]+$/.test(query)) {
+      if (/\d+\.\d+/.test(query) && !chapterFilter) {
         pageName = query;
         console.log(`Assuming '${pageName}' is valid chapter + page number.`);
       } else {
@@ -50,16 +61,53 @@ module.exports = {
     }
 
     function processPage(pageToProcess: string) {
+      const replaceArray = [
+        {
+          originalArt: '13_86',
+          replacementArt: '13_86a',
+        },
+        {
+          originalArt: '07_30',
+          replacementArt: '07_30a',
+        },
+        {
+          originalURL: 'ch16_90',
+          replacementURL: 'illbailnomore',
+        },
+        {
+          originalURL: 'ch16_91',
+          replacementURL: 'illbailnomore',
+        },
+        {
+          originalURL: 'ch16_92',
+          replacementURL: 'illbailnomore',
+        },
+        {
+          originalURL: 'ch16_93',
+          replacementURL: 'illbailnomore',
+        },
+      ];
+
       const chapterNumber = String(pageToProcess.match(/\d+(?=\.)/));
       const chapter = chapterNumber.padStart(2, '0');
 
       const pageNumber = String(pageToProcess.match(/(?<=\.)\d+/));
       const page = pageNumber.padStart(2, '0');
 
-      const pageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
-      const imageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`;
+      let pageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
+      let imageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`;
       const desc = `[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${pageURL})`;
       const descriptionNoLink = `Chapter ${chapterNumber}, Page ${pageNumber} ↗`;
+
+      replaceArray.forEach((item) => {
+        if (item.originalArt && imageURL.includes(item.originalArt)) {
+          imageURL = imageURL.replace(item.originalArt, item.replacementArt);
+        }
+
+        if (item.originalURL && pageURL.includes(item.originalURL)) {
+          pageURL = pageURL.replace(item.originalURL, item.replacementURL);
+        }
+      });
 
       return {
         pageURL: pageURL,
@@ -88,6 +136,19 @@ module.exports = {
       pageEmbed.setImage(currentPage.imageURL);
     }
 
-    await interaction.reply({ embeds: [pageEmbed] });
+    if (chapterFilter) {
+      query = `"\`${query}\`" in ch${chapterFilter}`;
+    } else {
+      query = `"\`${query}\`"`;
+    }
+
+    if (query.length > 0) {
+      await interaction.reply({
+        content: query,
+        embeds: [pageEmbed],
+      });
+    } else {
+      await interaction.reply({ embeds: [pageEmbed] });
+    }
   },
 };
