@@ -1,6 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { MessageEmbed } from 'discord.js';
 import indexer from '../functions/indexer';
+import dotenv from 'dotenv';
+import fs from 'fs';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -61,44 +63,22 @@ module.exports = {
     }
 
     function processPage(pageToProcess: string) {
-      const replaceArray = [
-        {
-          originalArt: '07_30',
-          replacementArt: '07_30a',
-        },
-        {
-          originalArt: '09_10',
-          replacementArt: '09_10b',
-        },
-        {
-          originalURL: '10_46',
-          replacementURL: '10_45',
-        },
-        {
-          originalArt: '13_86',
-          replacementArt: '13_86a',
-        },
-        {
-          originalURL: '10_88',
-          replacementURL: '10_87',
-        },
-        {
-          originalURL: 'ch16_90',
-          replacementURL: 'illbailnomore',
-        },
-        {
-          originalURL: 'ch16_91',
-          replacementURL: 'illbailnomore',
-        },
-        {
-          originalURL: 'ch16_92',
-          replacementURL: 'illbailnomore',
-        },
-        {
-          originalURL: 'ch16_93',
-          replacementURL: 'illbailnomore',
-        },
-      ];
+      dotenv.config();
+
+      // this should be done once on load
+
+      const rewriteFileLocation = process.env.URL_REWRITE_FILE;
+      let replaceArray: any[] = [];
+
+      if (rewriteFileLocation) {
+        try {
+          replaceArray = JSON.parse(
+            fs.readFileSync(rewriteFileLocation, 'utf8'),
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      }
 
       const chapterNumber = String(pageToProcess.match(/\d+(?=\.)/));
       const chapter = chapterNumber.padStart(2, '0');
