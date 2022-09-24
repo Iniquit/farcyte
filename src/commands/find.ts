@@ -63,12 +63,24 @@ module.exports = {
     function processPage(pageToProcess: string) {
       const replaceArray = [
         {
+          originalArt: '07_30',
+          replacementArt: '07_30a',
+        },
+        {
+          originalArt: '09_10',
+          replacementArt: '09_10b',
+        },
+        {
+          originalURL: '10_46',
+          replacementURL: '10_45',
+        },
+        {
           originalArt: '13_86',
           replacementArt: '13_86a',
         },
         {
-          originalArt: '07_30',
-          replacementArt: '07_30a',
+          originalURL: '10_88',
+          replacementURL: '10_87',
         },
         {
           originalURL: 'ch16_90',
