@@ -1,35 +1,89 @@
-import lunr from 'lunr';
-import * as fs from 'fs/promises';
-import dotenv from 'dotenv';
-dotenv.config();
+import * as fs from "fs/promises";
+import dotenv from "dotenv";
+import FlexSearch from "flexsearch";
 
-let index: lunr.Index | null = null;
-
-export default { Index: index, CreateIndex, find };
-
-async function find(query: string) {
-  if (index == null)
-    index = await CreateIndex(process.env.TRANSCRIPT_FILE ?? 'null');
-  return index.search(query);
+export class ComicPage {
+  name: string = "";
+  text: string = "";
 }
 
-async function CreateIndex(transcriptFile: string) {
-  const data = await fs.readFile(transcriptFile, 'utf8');
-  const pageRegex =
-    /(?<name>(?<=\n)[\d]+\.[\d]+)(?<text>[\s\S]+?)(?=\n[\d]+\.[\d]+|\nCHAPTER|$(?![\r\n]))/gim;
-  const transcriptPages = [...data.matchAll(pageRegex)].map((e) =>
-    Object.assign({}, e.groups),
-  );
+export class ComicLine {
+  id: number = 1;
+  speaker: string = "";
+  dialogue: string = "";
+  page: string = "";
+}
 
-  const index = lunr(function () {
-    this.ref('name');
-    this.field('text');
-    this.field('name');
-    this.pipeline.remove(lunr.stemmer);
-    this.pipeline.remove(lunr.stopWordFilter);
-    this.searchPipeline.remove(lunr.stemmer);
-    this.searchPipeline.remove(lunr.stopWordFilter);
-    transcriptPages.forEach((doc) => this.add(doc));
+export class Indexer {
+  index = new FlexSearch.Document({
+    preset: "match",
+    tokenize: "forward",
+    document: {
+      id: "id",
+      index: ["speaker", "dialogue", "page"],
+      store: true,
+    },
   });
-  return index;
+
+  constructor() {
+    dotenv.config();
+  }
+
+  async searchIndex(query: string, limit: number = 1) {
+    await this.populateIndex();
+    return this.index.search(query, {
+      enrich: true,
+      suggest: false,
+      limit: limit,
+    });
+  }
+
+  async populateIndex() {
+    const transcriptFilePath = process.env.TRANSCRIPT_FILE ?? "null";
+    let data = await fs.readFile(transcriptFilePath, "utf8");
+
+    const pageRegex =
+      /(?<name>(?<=\n)[\d]+\.[\d]+)(?<text>[\s\S]+?)(?=\n[\d]+\.[\d]+|\nCHAPTER|$(?![\r\n]))/gim;
+
+    const transcriptPages = [...data.matchAll(pageRegex)].map((e) => {
+      const page = new ComicPage();
+      page.name = e.groups?.name ?? "";
+      page.text = e.groups?.text.trim() ?? "";
+
+      return page;
+    });
+
+    const pageLines = new Array<ComicLine>();
+
+    transcriptPages.forEach((x) => {
+      const lineRegex = /(?<speaker>^[^\n\r\d\[][^:]*):(?<dialogue>.*$)/gim;
+
+      const derivedLines = [...x.text.matchAll(lineRegex)].map((e) => {
+        const line = new ComicLine();
+        line.speaker = e.groups?.speaker ?? "";
+        line.dialogue = e.groups?.dialogue ?? "";
+        line.page = x.name;
+
+        return line;
+      });
+
+      pageLines.push(...derivedLines);
+    });
+
+    pageLines.forEach((x, i) => {
+      this.index.add({
+        id: i,
+        page: x.page,
+        speaker: x.speaker,
+        dialogue: x.dialogue,
+      });
+    });
+  }
 }
+
+// export class PageResult extends DocumentData {
+//   id: number = -1;
+//   page: string = "";
+//   speaker: string = "";
+//   dialogue: string = "";
+// }

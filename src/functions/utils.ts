@@ -1,10 +1,14 @@
-import chalk from 'chalk';
+import chalk from "chalk";
 
 export { log };
 
- function log(arg: string) {
-    const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-    const timeDate = new Date().toLocaleDateString('en-US', options);
-
-    console.log(chalk.cyan(`[${timeDate}] `) + chalk.whiteBright(`${arg}`));
+function log(arg: string) {
+  const timeDate = new Date().toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  });
+  console.log(chalk.cyan(`[${timeDate}] `) + chalk.whiteBright(`${arg}`));
 }
