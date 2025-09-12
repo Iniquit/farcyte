@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { Indexer } from "../functions/indexer";
-import { SearchResult } from "../../tests/exactPhrase.test";
+// import { SearchResult } from "../../tests/exactPhrase.test";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -38,7 +38,7 @@ module.exports = {
     const searchResult = await indexer.searchIndex(query, 5);
     const test = searchResult[0];
 
-    const test2 = test?.result[0] as unknown as SearchResult;
+    const test2 = test?.result[0]; //
     const test3 = test2?.doc?.page ?? "no page found";
 
     console.log(test.result);

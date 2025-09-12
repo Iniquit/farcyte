@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import dotenv from "dotenv";
-import FlexSearch from "flexsearch";
+import FlexSearch, { Encoder } from "flexsearch";
 
 export class ComicPage {
   name: string = "";
@@ -15,9 +15,12 @@ export class ComicLine {
 }
 
 export class Indexer {
+  indexPopulated: boolean = false;
+
   index = new FlexSearch.Document({
     preset: "match",
-    tokenize: "forward",
+    tokenize: "full",
+    encoder: "LatinBalance",
     document: {
       id: "id",
       index: ["speaker", "dialogue", "page"],
@@ -30,7 +33,10 @@ export class Indexer {
   }
 
   async searchIndex(query: string, limit: number = 1) {
-    await this.populateIndex();
+    if (!this.indexPopulated) {
+      await this.populateIndex();
+    }
+
     return this.index.search(query, {
       enrich: true,
       suggest: false,
@@ -78,6 +84,7 @@ export class Indexer {
         dialogue: x.dialogue,
       });
     });
+    this.indexPopulated = true;
   }
 }
 
