@@ -1,49 +1,92 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { Indexer } from "../functions/indexer";
+import { MessageEmbed } from "discord.js";
 // import { SearchResult } from "../../tests/exactPhrase.test";
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("find")
-    .setDescription("Find a phrase or page in the Unsounded transcript.")
+    .setDescription("Search the Unsounded transcript for a comic page.")
     .addStringOption((option) =>
       option
         .setName("query")
         .setDescription(
-          "A phrase or page number to search for in the transcript."
+          "The phrase or page number you're searching for (e.g. '7.87' or 'reluctant escort')."
         )
         .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("speaker")
+        .setDescription(
+          "Restrict results to a specific speaker (e.g. 'Sette' or 'Mikaila')."
+        )
+        .setRequired(false)
     )
     .addIntegerOption((option) =>
       option
         .setName("chapter")
         .setDescription(
-          "The chapter to which your search should be restricted."
+          "Restrict results to a specific chapter (e.g. '7' for chapter 7)."
         )
+        .setRequired(false)
     )
     .addBooleanOption((option) =>
       option
         .setName("quiet")
-        .setDescription("Should the page preview should be hidden?")
+        .setDescription("Provide a text-only response without a page preview.")
         .setRequired(false)
     ),
+
   async execute(interaction: any) {
     let pageName = null;
     let foundPage = null;
     let query: string = interaction.options.getString("query");
     const chapterFilter: number = interaction.options.getInteger("chapter");
+    const speakerFilter: string = interaction.options.getString("speaker");
     const isQuiet: boolean = interaction.options.getBoolean("quiet");
 
     const indexer = new Indexer();
-    const searchResult = await indexer.searchIndex(query, 5);
-    const test = searchResult[0];
+    const searchResult = await indexer.searchIndex(query, 5, speakerFilter);
 
-    const test2 = test?.result[0]; //
-    const test3 = test2?.doc?.page ?? "no page found";
+    console.log(searchResult);
 
-    console.log(test.result);
-    console.log("Best Match:", test2);
-    console.log(test3);
+    const targetPage = (searchResult[0]?.doc?.page as string) ?? null;
+
+    if (targetPage === null) {
+      interaction.reply({
+        content: "Couldn't find a match. Try again?",
+        ephemeral: true,
+      });
+      console.log("Couldn't find a match.");
+      return;
+    }
+
+    //console.log("Query:", query, "best results:", targetPage);
+
+    const currentPage = processPage(targetPage);
+
+    const pageEmbed = new MessageEmbed()
+      .setColor(5793266)
+      .setTitle(`**${targetPage} | ${currentPage.descriptionNoLink}**`)
+      .setURL(currentPage.pageURL);
+
+    if (!isQuiet) {
+      pageEmbed.setImage(currentPage.imageURL);
+    }
+
+    // if (!isQuiet && suggestionsList.length > 9) {
+    //   pageEmbed.setDescription(`Also try ${suggestionsList}`);
+    // }
+
+    if (query.length > 0) {
+      await interaction.reply({
+        content: `${`\`"${query}"\``}`,
+        embeds: [pageEmbed],
+      });
+    } else {
+      await interaction.reply({ embeds: [pageEmbed] });
+    }
 
     // if (chapterFilter) {
     //   foundPage = foundPage.filter(
@@ -76,52 +119,52 @@ module.exports = {
     //     }
     //   }
 
-    //   function processPage(pageToProcess: string) {
-    //     dotenv.config();
+    function processPage(pageToProcess: string) {
+      // dotenv.config();
 
-    //     // this should be done once on load
+      // this should be done once on load
 
-    //     const rewriteFileLocation = process.env.URL_REWRITE_FILE;
-    //     let replaceArray: any[] = [];
+      // const rewriteFileLocation = process.env.URL_REWRITE_FILE;
+      // let replaceArray: any[] = [];
 
-    //     if (rewriteFileLocation) {
-    //       try {
-    //         replaceArray = JSON.parse(
-    //           fs.readFileSync(rewriteFileLocation, "utf8")
-    //         );
-    //       } catch (e) {
-    //         console.log(e);
-    //       }
-    //     }
+      // if (rewriteFileLocation) {
+      //   try {
+      //     replaceArray = JSON.parse(
+      //       fs.readFileSync(rewriteFileLocation, "utf8")
+      //     );
+      //   } catch (e) {
+      //     console.log(e);
+      //   }
+      // }
 
-    //     const chapterNumber = String(pageToProcess.match(/\d+(?=\.)/));
-    //     const chapter = chapterNumber.padStart(2, "0");
+      const chapterNumber = String(pageToProcess.match(/\d+(?=\.)/));
+      const chapter = chapterNumber.padStart(2, "0");
 
-    //     const pageNumber = String(pageToProcess.match(/(?<=\.)\d+/));
-    //     const page = pageNumber.padStart(2, "0");
+      const pageNumber = String(pageToProcess.match(/(?<=\.)\d+/));
+      const page = pageNumber.padStart(2, "0");
 
-    //     let pageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
-    //     let imageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`;
-    //     const desc = `[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${pageURL})`;
-    //     const descriptionNoLink = `Chapter ${chapterNumber}, Page ${pageNumber} ↗`;
+      let pageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/ch${chapter}_${page}.html`;
+      let imageURL = `https://www.casualvillain.com/Unsounded/comic/ch${chapter}/pageart/ch${chapter}_${page}.jpg`;
+      const desc = `[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${pageURL})`;
+      const descriptionNoLink = `Chapter ${chapterNumber}, Page ${pageNumber} ↗`;
 
-    //     replaceArray.forEach((item) => {
-    //       if (item.originalArt && imageURL.includes(item.originalArt)) {
-    //         imageURL = imageURL.replace(item.originalArt, item.replacementArt);
-    //       }
+      // replaceArray.forEach((item) => {
+      //   if (item.originalArt && imageURL.includes(item.originalArt)) {
+      //     imageURL = imageURL.replace(item.originalArt, item.replacementArt);
+      //   }
 
-    //       if (item.originalURL && pageURL.includes(item.originalURL)) {
-    //         pageURL = pageURL.replace(item.originalURL, item.replacementURL);
-    //       }
-    //     });
+      //   if (item.originalURL && pageURL.includes(item.originalURL)) {
+      //     pageURL = pageURL.replace(item.originalURL, item.replacementURL);
+      //   }
+      // });
 
-    //     return {
-    //       pageURL: pageURL,
-    //       imageURL: imageURL,
-    //       description: desc,
-    //       descriptionNoLink: descriptionNoLink,
-    //     };
-    //   }
+      return {
+        pageURL: pageURL,
+        imageURL: imageURL,
+        description: desc,
+        descriptionNoLink: descriptionNoLink,
+      };
+    }
 
     //   // const suggestionsList =
     //   //   foundPage
@@ -148,13 +191,6 @@ module.exports = {
     //     query = `"\`${query}\`"`;
     //   }
 
-    //   if (query.length > 0) {
-    //     await interaction.reply({
-    //       content: query,
-    //       embeds: [pageEmbed],
-    //     });
-    //   } else {
-    //     await interaction.reply({ embeds: [pageEmbed] });
-    //   }
+    //
   },
 };

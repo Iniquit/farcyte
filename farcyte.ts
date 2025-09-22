@@ -1,6 +1,5 @@
 import { readdirSync } from "fs";
 import { Client, Intents, Collection, Interaction } from "discord.js";
-import { log } from "./src/functions/utils";
 import dotenv from "dotenv";
 import { Command } from "./src/command";
 import { CommandDeployer } from "./deploy-commands";
@@ -35,7 +34,7 @@ class Farcyte {
     }
 
     this.client.once("ready", () => {
-      //console.log("Farcyte is awake!");
+      console.log("Farcyte is awake!");
       this.client.user?.setActivity("/find");
     });
 
