@@ -1,4 +1,5 @@
 import { Collection, Interaction } from "discord.js";
+import { Indexer } from "./functions/indexer";
 
 declare module "discord.js" {
   export interface Client {
@@ -10,5 +11,5 @@ declare module "discord.js" {
 export interface Command {
   name: string;
   description: string;
-  execute(interaction: Interaction): void;
+  execute(interaction: Interaction, indexer: Indexer): void;
 }

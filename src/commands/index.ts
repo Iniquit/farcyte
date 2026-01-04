@@ -1,7 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { Indexer } from "../functions/indexer";
-import { MessageEmbed } from "discord.js";
-// import { SearchResult } from "../../tests/exactPhrase.test";
 
 module.exports = {
   data: new SlashCommandBuilder()

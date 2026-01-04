@@ -1,11 +1,21 @@
 import { readdirSync } from "fs";
-import { Client, Intents, Collection, Interaction } from "discord.js";
+import {
+  Client,
+  Collection,
+  Interaction,
+  Partials,
+  GatewayIntentBits,
+  Events,
+  MessageFlags,
+} from "discord.js";
 import dotenv from "dotenv";
 import { Command } from "./src/command";
 import { CommandDeployer } from "./deploy-commands";
+import { Indexer } from "./src/functions/indexer";
 
 class Farcyte {
   private commands = new Collection<string, Command>();
+  private indexer = new Indexer();
 
   commandFiles = readdirSync("./src/commands").filter((file: string) =>
     file.endsWith(".ts")
@@ -17,15 +27,16 @@ class Farcyte {
 
   client = new Client({
     intents: [
-      Intents.FLAGS.GUILDS,
-      Intents.FLAGS.GUILD_MESSAGES,
-      Intents.FLAGS.DIRECT_MESSAGES,
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.DirectMessages,
     ],
-    partials: ["CHANNEL"],
+    partials: [Partials.Channel],
   });
 
   init() {
     dotenv.config();
+    this.indexer.populateIndex();
 
     if (process.env.REST_REQUEST_TIMEOUT_MS) {
       this.client.restRequestTimeout = parseInt(
@@ -33,7 +44,7 @@ class Farcyte {
       );
     }
 
-    this.client.once("ready", () => {
+    this.client.once("clientReady", () => {
       console.log("Farcyte is awake!");
       this.client.user?.setActivity("/find");
     });
@@ -43,27 +54,29 @@ class Farcyte {
       this.commands.set(command.data.name, command);
     }
 
-    this.client.on("interactionCreate", async (interaction: Interaction) => {
-      if (!interaction.isApplicationCommand()) {
-        return;
-      }
+    this.client.on(
+      Events.InteractionCreate,
+      async (interaction: Interaction) => {
+        if (!interaction.isCommand()) {
+          return;
+        }
 
-      const command = this.commands.get(interaction.commandName);
+        const command = this.commands.get(interaction.commandName);
+        if (!command) {
+          return;
+        }
 
-      if (!command) {
-        return;
+        try {
+          command.execute(interaction, this.indexer);
+        } catch (error) {
+          console.error(error);
+          await interaction.reply({
+            content: "There was an error while executing this command!",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
       }
-
-      try {
-        command.execute(interaction);
-      } catch (error) {
-        console.error(error);
-        await interaction.reply({
-          content: "There was an error while executing this command!",
-          ephemeral: true,
-        });
-      }
-    });
+    );
     this.client.login(process.env.TOKEN);
   }
 }

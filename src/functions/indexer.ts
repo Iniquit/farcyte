@@ -16,10 +16,10 @@ export class Indexer {
   allPageLines: ComicLine[] = [];
 
   index = new FlexSearch.Document({
-    preset: "score",
+    preset: "match",
     context: false,
-    // tokenize: "full",
-    encoder: "LatinSoundex", //LatinExtra
+    tokenize: "tolerant",
+    encoder: "Normalize", //LatinExtra
     document: {
       id: "id",
       index: ["speaker", "dialogue", "page", "chapter"],
@@ -31,7 +31,7 @@ export class Indexer {
     preset: "match",
     tokenize: "strict",
     context: {
-      resolution: 9,
+      resolution: 1,
       depth: 2,
       bidirectional: true,
     },
@@ -115,7 +115,8 @@ export class Indexer {
     const pageLines = new Array<ComicLine>();
 
     transcriptPages.forEach((x) => {
-      const lineRegex = /(?<speaker>^[^\n\r\d\[][^[:]*)[[:](?<dialogue>.*$)/gim;
+      const lineRegex =
+        /^(?<speaker>[^\n\r\d[:]*?)(?:\[.*?\])*: (?<dialogue>.*)$/gim;
       const derivedLines = [...x.text.matchAll(lineRegex)].map((e) => {
         const line = new ComicLine();
         line.speaker = e.groups?.speaker ?? "";

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { Indexer } from "../functions/indexer";
-import { MessageEmbed } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -35,7 +35,7 @@ module.exports = {
       return;
     }
 
-    const pageEmbed = new MessageEmbed()
+    const pageEmbed = new EmbedBuilder()
       .setColor(5793266)
       .setTitle(`**${targetPage} | ${currentPage.descriptionNoLink}**`)
       .setURL(currentPage.pageURL)

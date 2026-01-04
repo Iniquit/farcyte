@@ -1,7 +1,6 @@
-import { SlashCommandBuilder } from "@discordjs/builders";
+import { EmbedBuilder, SlashCommandBuilder } from "@discordjs/builders";
 import { Indexer } from "../functions/indexer";
-import { MessageEmbed } from "discord.js";
-// import { SearchResult } from "../../tests/exactPhrase.test";
+import * as fs from "fs";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -31,6 +30,12 @@ module.exports = {
         )
         .setRequired(false)
     )
+    .addIntegerOption((option) =>
+      option
+        .setName("limit")
+        .setDescription("Number of suggestions to provide (default 5, max 20).")
+        .setRequired(false)
+    )
     .addBooleanOption((option) =>
       option
         .setName("quiet")
@@ -38,18 +43,21 @@ module.exports = {
         .setRequired(false)
     ),
 
-  async execute(interaction: any) {
-    let pageName = null;
-    let foundPage = null;
+  async execute(interaction: any, indexer: Indexer) {
     let query: string = interaction.options.getString("query");
     const chapterFilter: number = interaction.options.getInteger("chapter");
     const speakerFilter: string = interaction.options.getString("speaker");
+    const limit: number = interaction.options.getInteger("limit") ?? 5;
     const isQuiet: boolean = interaction.options.getBoolean("quiet");
 
-    const indexer = new Indexer();
-    const searchResult = await indexer.searchIndex(query, 5, speakerFilter);
+    const searchResult = await indexer.searchIndex(query, limit, speakerFilter);
 
-    console.log(searchResult);
+    console.log(
+      query,
+      searchResult.slice(0, limit + 1).map((r) => {
+        return { page: r.doc?.page, dialogue: r.doc?.dialogue };
+      })
+    );
 
     const targetPage = (searchResult[0]?.doc?.page as string) ?? null;
 
@@ -62,11 +70,9 @@ module.exports = {
       return;
     }
 
-    //console.log("Query:", query, "best results:", targetPage);
-
     const currentPage = processPage(targetPage);
 
-    const pageEmbed = new MessageEmbed()
+    const pageEmbed = new EmbedBuilder()
       .setColor(5793266)
       .setTitle(`**${targetPage} | ${currentPage.descriptionNoLink}**`)
       .setURL(currentPage.pageURL);
@@ -75,9 +81,18 @@ module.exports = {
       pageEmbed.setImage(currentPage.imageURL);
     }
 
-    // if (!isQuiet && suggestionsList.length > 9) {
-    //   pageEmbed.setDescription(`Also try ${suggestionsList}`);
-    // }
+    const suggestionsList: string =
+      searchResult
+        ?.slice(1, limit + 1)
+        .map(
+          (x) =>
+            `[${x.doc?.page}](${processPage(x.doc?.page as string).pageURL})`
+        )
+        .join(", ") ?? "";
+
+    if (!isQuiet && suggestionsList.length > 9) {
+      pageEmbed.setDescription(`Also try ${suggestionsList}`);
+    }
 
     if (query.length > 0) {
       await interaction.reply({
@@ -120,22 +135,18 @@ module.exports = {
     //   }
 
     function processPage(pageToProcess: string) {
-      // dotenv.config();
+      const rewriteFileLocation = process.env.URL_REWRITE_FILE;
+      let replaceArray: any[] = [];
 
-      // this should be done once on load
-
-      // const rewriteFileLocation = process.env.URL_REWRITE_FILE;
-      // let replaceArray: any[] = [];
-
-      // if (rewriteFileLocation) {
-      //   try {
-      //     replaceArray = JSON.parse(
-      //       fs.readFileSync(rewriteFileLocation, "utf8")
-      //     );
-      //   } catch (e) {
-      //     console.log(e);
-      //   }
-      // }
+      if (rewriteFileLocation) {
+        try {
+          replaceArray = JSON.parse(
+            fs.readFileSync(rewriteFileLocation, "utf8")
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      }
 
       const chapterNumber = String(pageToProcess.match(/\d+(?=\.)/));
       const chapter = chapterNumber.padStart(2, "0");
@@ -148,15 +159,15 @@ module.exports = {
       const desc = `[Unsounded Chapter ${chapterNumber}, Page ${pageNumber} ↗](${pageURL})`;
       const descriptionNoLink = `Chapter ${chapterNumber}, Page ${pageNumber} ↗`;
 
-      // replaceArray.forEach((item) => {
-      //   if (item.originalArt && imageURL.includes(item.originalArt)) {
-      //     imageURL = imageURL.replace(item.originalArt, item.replacementArt);
-      //   }
+      replaceArray.forEach((item) => {
+        if (item.originalArt && imageURL.includes(item.originalArt)) {
+          imageURL = imageURL.replace(item.originalArt, item.replacementArt);
+        }
 
-      //   if (item.originalURL && pageURL.includes(item.originalURL)) {
-      //     pageURL = pageURL.replace(item.originalURL, item.replacementURL);
-      //   }
-      // });
+        if (item.originalURL && pageURL.includes(item.originalURL)) {
+          pageURL = pageURL.replace(item.originalURL, item.replacementURL);
+        }
+      });
 
       return {
         pageURL: pageURL,
@@ -165,13 +176,6 @@ module.exports = {
         descriptionNoLink: descriptionNoLink,
       };
     }
-
-    //   // const suggestionsList =
-    //   //   foundPage
-    //   //     ?.slice(1, 6)
-    //   //     .map((x: any) => `[${x.ref}](${processPage(x.ref).pageURL})`)
-    //   //     .join(", ") ?? "";
-    //   const currentPage = processPage(pageName);
 
     //   const pageEmbed = new MessageEmbed()
     //     .setColor(5793266)

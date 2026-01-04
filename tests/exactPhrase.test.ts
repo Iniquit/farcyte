@@ -1,6 +1,7 @@
 import { Indexer } from "../src/functions/indexer";
 
 const indexer = new Indexer();
+indexer.populateIndex();
 
 function Expect(phrase: string, targetPage: string) {
   test(`Query "${phrase}" finds ${targetPage}`, async () => {
