@@ -50,16 +50,35 @@ module.exports = {
     const limit: number = interaction.options.getInteger("limit") ?? 5;
     const isQuiet: boolean = interaction.options.getBoolean("quiet");
 
-    const searchResult = await indexer.searchIndex(query, limit, speakerFilter);
+    const convertedChapterFilter = chapterFilter
+      ? (chapterFilter.toString() ?? null)
+      : null;
 
-    console.log(
-      query,
-      searchResult.slice(0, limit + 1).map((r) => {
-        return { page: r.doc?.page, dialogue: r.doc?.dialogue };
-      })
-    );
+    const isPageNumberSearch = isPageNumberQuery(query);
 
-    const targetPage = (searchResult[0]?.doc?.page as string) ?? null;
+    let targetPage: string | null;
+    let searchResult;
+
+    if (isPageNumberSearch) {
+      targetPage =
+        indexer.allPageLines.find((line) => line.page === query)?.page ?? null;
+    } else {
+      searchResult = await indexer.searchIndex(
+        query,
+        limit,
+        speakerFilter,
+        convertedChapterFilter
+      );
+
+      console.log(
+        `query: ${query}\nresults: `,
+        searchResult.slice(0, limit + 1).map((r) => {
+          return { page: r.doc?.page, dialogue: r.doc?.dialogue };
+        })
+      );
+
+      targetPage = (searchResult[0]?.doc?.page as string) ?? null;
+    }
 
     if (targetPage === null) {
       interaction.reply({
@@ -90,49 +109,35 @@ module.exports = {
         )
         .join(", ") ?? "";
 
-    if (!isQuiet && suggestionsList.length > 9) {
+    if (!isQuiet && !isPageNumberQuery(query) && suggestionsList.length > 9) {
       pageEmbed.setDescription(`Also try ${suggestionsList}`);
     }
 
+    let additionalQueryParams = "";
+
     if (query.length > 0) {
+      if (speakerFilter) {
+        additionalQueryParams += ` spoken by ${speakerFilter}`;
+      }
+
+      if (chapterFilter) {
+        additionalQueryParams += ` in ch${chapterFilter}`;
+      }
+
       await interaction.reply({
-        content: `${`\`"${query}"\``}`,
+        content: `${`\`"${query}"\``}${additionalQueryParams}`,
         embeds: [pageEmbed],
       });
     } else {
       await interaction.reply({ embeds: [pageEmbed] });
     }
 
-    // if (chapterFilter) {
-    //   foundPage = foundPage.filter(
-    //     (page) => page.ref.split(".")[0] === chapterFilter.toString(),
-    //   );
-    // }
-
-    //pageDoc.id;
-    // console.log(
-    //   `Found ${foundPage[0].ref} in transcript with certainty ${Math.round(
-    //     foundPage[0].score,
-    //   )}.`,
-    // );
-
-    //}
-
-    //   catch(e) {
-    //     console.error(e);
-    //     if (/\d+\.\d+/.test(query) && !chapterFilter) {
-    //       pageName = query;
-    //       console.log(`Assuming '${pageName}' is valid chapter + page number.`);
-    //     } else {
-    //       interaction.reply({
-    //         content:
-    //           "No matches. Try removing punctuation or using a longer search query.",
-    //         ephemeral: true,
-    //       });
-    //       console.log("Couldn't find a match.");
-    //       return;
-    //     }
-    //   }
+    function isPageNumberQuery(query: string): boolean {
+      query = query.trim();
+      let isPageNumber = false;
+      isPageNumber = /^\d+(\.\d+)?$/.test(query);
+      return isPageNumber;
+    }
 
     function processPage(pageToProcess: string) {
       const rewriteFileLocation = process.env.URL_REWRITE_FILE;
@@ -176,25 +181,5 @@ module.exports = {
         descriptionNoLink: descriptionNoLink,
       };
     }
-
-    //   const pageEmbed = new MessageEmbed()
-    //     .setColor(5793266)
-    //     .setTitle(`**${pageName} | ${currentPage.descriptionNoLink}**`)
-    //     .setURL(currentPage.pageURL);
-    //   // if (!isQuiet && suggestionsList.length > 9) {
-    //   //   pageEmbed.setDescription(`Also try ${suggestionsList}`);
-    //   // }
-
-    //   if (!isQuiet) {
-    //     pageEmbed.setImage(currentPage.imageURL);
-    //   }
-
-    //   if (chapterFilter) {
-    //     query = `"\`${query}\`" in ch${chapterFilter}`;
-    //   } else {
-    //     query = `"\`${query}\`"`;
-    //   }
-
-    //
   },
 };

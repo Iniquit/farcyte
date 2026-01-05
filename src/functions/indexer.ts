@@ -5,6 +5,7 @@ import FlexSearch, {
   EnrichedResults,
   Resolver,
 } from "flexsearch";
+import path from "path";
 
 export class Indexer {
   indexPopulated: boolean = false;
@@ -14,12 +15,19 @@ export class Indexer {
   lastLoadedPage: string = "";
   uniqueSpeakers: Set<string> = new Set<string>();
   allPageLines: ComicLine[] = [];
+  logFilePath = path.join(__dirname, "log.txt");
 
   index = new FlexSearch.Document({
     preset: "match",
-    context: false,
-    tokenize: "tolerant",
+    tokenize: "strict",
     encoder: "Normalize", //LatinExtra
+    resolution: 20,
+    //    context: false,
+    context: {
+      resolution: 1,
+      depth: 2,
+      bidirectional: true,
+    },
     document: {
       id: "id",
       index: ["speaker", "dialogue", "page", "chapter"],
@@ -30,11 +38,11 @@ export class Indexer {
   exactPageIndex = new FlexSearch.Document({
     preset: "match",
     tokenize: "strict",
-    context: {
-      resolution: 1,
-      depth: 2,
-      bidirectional: true,
-    },
+    // context: {
+    //   resolution: 1,
+    //   depth: 2,
+    //   bidirectional: true,
+    // },
     // encoder: "LatinSoundex",
     document: {
       id: "id",
@@ -45,6 +53,17 @@ export class Indexer {
 
   constructor() {
     dotenv.config();
+  }
+
+  logToFile(messages: Array<ComicLine>) {
+    const logData =
+      messages
+        .map((x) => `${x.chapter} ${x.page} ${x.speaker}: ${x.dialogue}`)
+        .join("\n") + "\n";
+    fs.writeFile(this.logFilePath, ""); // clear existing log file
+    fs.appendFile(this.logFilePath, logData).catch((err) =>
+      console.error("Error writing to log file:", err)
+    );
   }
 
   async searchIndex(
@@ -60,15 +79,17 @@ export class Indexer {
     let resolver: Resolver<DocumentData>;
 
     function isPageNumberQuery(query: string): boolean {
-      return /^\d+(\.\d+)?$/.test(query.trim());
+      query = query.trim();
+      let isPageNumber = false;
+      isPageNumber = /^\d+(\.\d+)?$/.test(query);
+      return isPageNumber;
     }
 
     if (isPageNumberQuery(query)) {
-      resolver = this.index.search({
+      resolver = this.exactPageIndex.search({
         query: query,
         field: "page",
         limit: 1,
-        suggest: true,
         resolve: false,
       });
     } else {
@@ -85,6 +106,7 @@ export class Indexer {
       resolver.and({
         query: speakerFilter,
         field: "speaker",
+        suggest: true,
       });
     }
 
@@ -92,6 +114,7 @@ export class Indexer {
       resolver.and({
         query: chapterFilter,
         field: "chapter",
+        suggest: true,
       });
     }
 
@@ -116,7 +139,7 @@ export class Indexer {
 
     transcriptPages.forEach((x) => {
       const lineRegex =
-        /^(?<speaker>[^\n\r\d[:]*?)(?:\[.*?\])*: (?<dialogue>.*)$/gim;
+        /^(?<speaker>[^\n\r\d:]*?)(?:\[.*?\])*: (?<dialogue>.*)$/gim;
       const derivedLines = [...x.text.matchAll(lineRegex)].map((e) => {
         const line = new ComicLine();
         line.speaker = e.groups?.speaker ?? "";
@@ -158,6 +181,7 @@ export class Indexer {
     );
 
     this.indexPopulated = true;
+    this.logToFile(this.allPageLines);
   }
 }
 
