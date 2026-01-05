@@ -92,7 +92,7 @@ module.exports = {
     const currentPage = processPage(targetPage);
 
     const pageEmbed = new EmbedBuilder()
-      .setColor(5793266)
+      .setColor(0x5b76ec)
       .setTitle(`**${targetPage} | ${currentPage.descriptionNoLink}**`)
       .setURL(currentPage.pageURL);
 
